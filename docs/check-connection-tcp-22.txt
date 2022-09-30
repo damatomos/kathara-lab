@@ -1,0 +1,2 @@
+SERVER (r1): iperf -s -i l -p 22
+CLIENT (any): iperf -c 10.10.10.1 -i l -p 22
