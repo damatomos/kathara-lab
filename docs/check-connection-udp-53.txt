@@ -1,0 +1,2 @@
+SERVER (dns): iperf -s -u -i l -p 53
+CLIENT (any): iperf -c 10.0.0.253 -u -i l -p 53
