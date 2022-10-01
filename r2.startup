@@ -4,6 +4,13 @@ ifconfig eth2 10.10.10.5/24
 
 route add default gw 10.10.10.1
 
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
 iptables -A INPUT -j REJECT
+
+for i in {1..100}; do iptables -A FORWARD -p udp -s 10.0.0.253 -d 192.168.0.$i --dport 53 -j ACCEPT; done
+for i in {1..100}; do iptables -A FORWARD -p udp -s 192.168.0.$i -d 10.0.0.253 --dport 53 -j ACCEPT; done
+
+for i in {1..100}; do iptables -A FORWARD -p tcp -s 10.0.0.0/24 -d 192.168.0.$i -j ACCEPT; done
+for i in {1..100}; do iptables -A FORWARD -p tcp -s 192.168.0.$i -d 10.0.0.0/24 -j ACCEPT; done
 iptables -A FORWARD -p tcp --dport 22 -j ACCEPT
 iptables -A FORWARD -j REJECT
