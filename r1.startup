@@ -4,21 +4,10 @@ route add default gw 10.10.10.5
 
 echo "nameserver 8.8.8.8" > /etc/resolv.conf
 
-# questao 1
+# question 01
 iptables -A INPUT -j REJECT
+iptables -P FORWARD DROP
 
-# questao 1
-iptables -A FORWARD -j REJECT
-
-# questao 3
-iptables -I FORWARD 1 -p tcp --dport 22 -j ACCEPT
-
-# questao 4
-iptables -I FORWARD 2 -p tcp -s 10.10.10.0/24 -d 192.168.0.0/255.255.255.100 -j ACCEPT
-
-iptables -I FORWARD 3 -p tcp -s 192.168.0.0/255.255.255.100 -d 10.10.10.0/24 -j ACCEPT
-
-# questao 5
-iptables -I FORWARD 4 -p udp --dport 53 -s 10.10.10.0/24 -d 10.0.0.253 -j ACCEPT
-
-iptables -I FORWARD 5 -p udp --dport 53 -s 10.0.0.253 -d 10.10.10.0/24 -j ACCEPT
+# question 03
+iptables -I INPUT -p tcp -j ACCEPT
+iptables -I INPUT -p tcp --dport 22 -j ACCEPT
