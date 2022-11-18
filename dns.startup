@@ -1,2 +1,93 @@
 ifconfig eth0 10.0.0.253/24
 route add default gw 10.0.0.1
+echo "nameserver 8.8.8.8" > /etc/resolv.conf
+
+apt-get update
+
+apt-get install bind9 bind9utils bind9-doc bind9-host -y
+
+echo "OPTIONS=\"-u bind -4\"" > /etc/default/named
+
+/etc/init.d/named start
+
+
+echo " acl \"trusted\" {
+  10.0.0.0/24;
+  192.168.0.0/24;
+  10.10.10.0/24;
+};
+
+options {
+  directory \"/var/cache/bind\";
+  recursion yes;
+  allow-recursion { trusted; };
+  listen-on { 10.0.0.253; };
+  allow-transfer { none; };
+  forwarders {
+    8.8.8.8;
+    8.8.4.4;
+  };
+  dnssec-validation no;
+};" > /etc/bind/named.conf.options
+
+/etc/init.d/named restart
+
+echo "zone \"admweb.empresa.com.br\" {
+  type master;
+  file \"/etc/bind/zones/db.admweb.empresa.com.br\"; # caminho para a base da zona
+};
+  zone \"0.0.10.in-addr.arpa\" {
+  type master;
+  file \"/etc/bind/zones/db.10.0.0\"; # Subrede 10.0.0.0/24
+};" > /etc/bind/named.conf.local
+
+mkdir /etc/bind/zones
+
+cp /etc/bind/db.local /etc/bind/zones/db.admweb.empresa.com.br
+
+echo "
+\$TTL 604800
+@ IN SOA dns.admweb.empresa.com.br. root.admweb.empresa.com.br. (
+
+3 ; Serial
+604800 ; Refresh
+86400 ; Retry
+2419200 ; Expire
+604800 ) ; Negative Cache TTL
+
+;
+@ IN NS dns.admweb.empresa.com.br.
+squid IN A 10.0.0.252
+dns IN A 10.0.0.253
+email IN A 10.10.10.4
+@ IN MX 10 email.admweb.empresa.com.br.
+samba IN A 10.0.0.251
+web IN A 10.10.10.3
+www IN CNAME app.admweb.empresa.com.br.
+ftp IN A 10.10.10.2
+" > /etc/bind/zones/db.admweb.empresa.com.br
+
+cp /etc/bind/db.127 /etc/bind/zones/db.10.0.0
+
+echo "
+\$TTL 604800
+@ IN SOA dns.admweb.empresa.com.br. root.admweb.empresa.com.br. (
+
+                3 ; Serial
+                604800 ; Refresh
+                86400 ; Retry
+                2419200 ; Expire
+                604800 ) ; Negative Cache TTL
+
+; name servers
+    IN NS dns.admweb.empresa.com.br.
+; PTR Records
+252 IN PTR squid.admweb.empresa.com.br. ; 10.0.0.252
+253 IN PTR dns.admweb.empresa.com.br. ; 10.0.0.253
+4 IN PTR email.admweb.empresa.com.br. ; 10.10.10.4
+251 IN PTR samba.admweb.empresa.com.br. ; 10.0.0.251
+3 IN PTR web.admweb.empresa.com.br. ; 10.10.10.3
+2 IN PTR ftp.admweb.empresa.com.br. ; 10.10.10.2
+" > /etc/bind/zones/db.10.0.0
+
+/etc/init.d/named restart
